@@ -22,9 +22,8 @@ CATEGORIES = config["categories"]
 SPREAD_ID  = config["spreadsheet_id"]
 
 # ── Google Sheets ──────────────────────────────
-@st.cache_resource
-def get_gc():
-    # Streamlit Cloud: secretsからtoken.jsonを生成
+def _load_creds():
+    """毎回クレデンシャルを読み込み、期限切れなら自動更新"""
     if "google_token" in st.secrets:
         import tempfile
         token_data = dict(st.secrets["google_token"])
@@ -36,7 +35,11 @@ def get_gc():
         creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-    return gspread.authorize(creds)
+    return creds
+
+def get_gc():
+    """gspreadクライアントを返す（トークン自動更新対応）"""
+    return gspread.authorize(_load_creds())
 
 WATCH_BUDGETS = {
     "食費":           30000,
