@@ -86,8 +86,8 @@ def append_to_sheet(entries: list):
     ws = gc.open_by_key(SPREAD_ID).worksheet("明細")
     rows = []
     for e in entries:
-        d = datetime.strptime(e["date"], "%Y-%m-%d")
-        rows.append([e["date"], DAYS_JA[d.weekday()], e["note"], e["category"], e["category"], e["amount"], ""])
+        # シート構成: 日付 | 店舗名 | 品目 | 費目 | 金額(税込) | メモ
+        rows.append([e["date"], e["note"], e["category"], e["category"], e["amount"], ""])
     ws.append_rows(rows, value_input_option="USER_ENTERED")
     return rows
 
@@ -441,15 +441,16 @@ if "done" not in st.session_state:
 # ── 完了画面 ───────────────────────────────────
 if st.session_state.done:
     rows  = st.session_state.done
-    total = sum(int(r[5]) for r in rows)
+    total = sum(int(r[4]) for r in rows)
 
     rows_html = ""
     for r in rows:
-        note_str = f'<span class="done-note">{r[2]}</span>' if r[2] else ""
+        # r: [日付, 店舗名, 品目, 費目, 金額, メモ]
+        note_str = f'<span class="done-note">{r[1]}</span>' if r[1] else ""
         rows_html += (
             f'<div class="done-row">'
             f'<span class="done-cat">{r[3]}{note_str}</span>'
-            f'<span class="done-amt">¥{int(r[5]):,}</span>'
+            f'<span class="done-amt">¥{int(r[4]):,}</span>'
             f'</div>'
         )
 
