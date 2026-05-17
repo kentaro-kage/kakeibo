@@ -69,11 +69,11 @@ def get_monthly_spending(year: int, month: int):
         prefix_s = f"{year}/{month:02d}"
         totals = {k: 0 for k in WATCH_BUDGETS}
         for r in rows:
-            if len(r) >= 5 and (r[0].startswith(prefix_h) or r[0].startswith(prefix_s)):
-                cat = r[3]  # 費目列（曜日列なし構成）
+            if len(r) >= 6 and (r[0].startswith(prefix_h) or r[0].startswith(prefix_s)):
+                cat = r[4]  # 費目列（7列構成: 日付|曜日|店舗名|品目|費目|金額|メモ）
                 if cat in totals:
                     try:
-                        amt_str = str(r[4]).replace(",", "").replace("¥", "").replace("￥", "").strip()
+                        amt_str = str(r[5]).replace(",", "").replace("¥", "").replace("￥", "").strip()
                         totals[cat] += int(float(amt_str))
                     except (ValueError, IndexError):
                         pass
@@ -86,8 +86,14 @@ def append_to_sheet(entries: list):
     ws = gc.open_by_key(SPREAD_ID).worksheet("明細")
     rows = []
     for e in entries:
-        # シート構成: 日付 | 店舗名 | 品目 | 費目 | 金額(税込) | メモ
-        rows.append([e["date"], e["note"], e["category"], e["category"], e["amount"], ""])
+        # シート構成: 日付 | 曜日 | 店舗名 | 品目 | 費目 | 金額(税込) | メモ
+        from datetime import date as _date
+        try:
+            d = _date.fromisoformat(e["date"])
+            day_ja = ["月","火","水","木","金","土","日"][d.weekday()]
+        except Exception:
+            day_ja = ""
+        rows.append([e["date"], day_ja, e["note"], e["category"], e["category"], e["amount"], ""])
     ws.append_rows(rows, value_input_option="USER_ENTERED")
     return rows
 
@@ -441,16 +447,16 @@ if "done" not in st.session_state:
 # ── 完了画面 ───────────────────────────────────
 if st.session_state.done:
     rows  = st.session_state.done
-    total = sum(int(r[4]) for r in rows)
+    total = sum(int(r[5]) for r in rows)
 
     rows_html = ""
     for r in rows:
-        # r: [日付, 店舗名, 品目, 費目, 金額, メモ]
-        note_str = f'<span class="done-note">{r[1]}</span>' if r[1] else ""
+        # r: [日付, 曜日, 店舗名, 品目, 費目, 金額, メモ]
+        note_str = f'<span class="done-note">{r[2]}</span>' if r[2] else ""
         rows_html += (
             f'<div class="done-row">'
-            f'<span class="done-cat">{r[3]}{note_str}</span>'
-            f'<span class="done-amt">¥{int(r[4]):,}</span>'
+            f'<span class="done-cat">{r[4]}{note_str}</span>'
+            f'<span class="done-amt">¥{int(r[5]):,}</span>'
             f'</div>'
         )
 
