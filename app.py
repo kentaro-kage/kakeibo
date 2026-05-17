@@ -440,7 +440,7 @@ button[kind="secondary"]:active {
 
 # ── セッション初期化 ────────────────────────────
 if "entries" not in st.session_state:
-    st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": 0, "note": ""}]
+    st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": None, "note": ""}]
 if "done" not in st.session_state:
     st.session_state.done = None
 
@@ -470,7 +470,7 @@ if st.session_state.done:
 
     if st.button("続けて入力する", use_container_width=True):
         st.session_state.done = None
-        st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": 0, "note": ""}]
+        st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": None, "note": ""}]
         st.rerun()
 
     st.markdown(
@@ -543,7 +543,7 @@ for i, e in enumerate(st.session_state.entries):
         )
 
         st.session_state.entries[i]["amount"] = st.number_input(
-            "金額（円）", min_value=0, value=None, step=10,
+            "金額（円）", min_value=0, value=e["amount"], step=10,
             placeholder="例: 1500", key=f"amt_{i}"
         )
 
@@ -564,7 +564,7 @@ if delete_idx is not None:
 # ── 追加ボタン ─────────────────────────────────
 st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 if st.button("＋  項目を追加", use_container_width=True):
-    st.session_state.entries.append({"date": str(date.today()), "category": "食費", "amount": 0, "note": ""})
+    st.session_state.entries.append({"date": str(date.today()), "category": "食費", "amount": None, "note": ""})
     st.rerun()
 
 # ── 合計 ───────────────────────────────────────
@@ -589,7 +589,7 @@ if st.button("記録する", type="primary", use_container_width=True):
             try:
                 rows = append_to_sheet(valid)
                 st.session_state.done = rows
-                st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": 0, "note": ""}]
+                st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": None, "note": ""}]
                 get_gc.clear()
                 get_monthly_spending.clear()   # 残高を即時更新
                 st.rerun()
