@@ -479,6 +479,17 @@ st.divider()
 spending, spend_err  = get_monthly_spending(today.year, today.month)
 if spend_err:
     st.warning(f"残高取得エラー: {spend_err}")
+
+with st.expander("🔍 デバッグ（確認後に削除）", expanded=False):
+    try:
+        _gc = get_gc()
+        _ws = _gc.open_by_key(SPREAD_ID).worksheet("明細")
+        _rows = _ws.get_all_values()
+        st.write("ヘッダー行:", _rows[0] if _rows else "なし")
+        st.write("データ行（最初の3件）:", _rows[1:4] if len(_rows) > 1 else "なし")
+        st.write("今月一致行数:", sum(1 for r in _rows[1:] if len(r)>0 and r[0].startswith("2026-05")))
+    except Exception as ex:
+        st.write("エラー:", ex)
 islands_html = ""
 
 for group in WATCH_GROUPS:
