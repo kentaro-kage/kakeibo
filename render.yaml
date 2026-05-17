@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: kakeibo-line-bot
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn line_bot_server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LINE_CHANNEL_SECRET
+        sync: false
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SPREADSHEET_ID
+        value: "1hbn526buIkrM2VUg10R2V8X6ifW1vCzBOGlNUWSv-3Q"
+      - key: GOOGLE_TOKEN_B64
+        sync: false
