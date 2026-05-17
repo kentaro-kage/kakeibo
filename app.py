@@ -543,7 +543,8 @@ for i, e in enumerate(st.session_state.entries):
         )
 
         st.session_state.entries[i]["amount"] = st.number_input(
-            "金額（円）", min_value=0, value=e["amount"], step=10, key=f"amt_{i}"
+            "金額（円）", min_value=0, value=None, step=10,
+            placeholder="例: 1500", key=f"amt_{i}"
         )
 
         st.session_state.entries[i]["note"] = st.text_input(
@@ -567,7 +568,7 @@ if st.button("＋  項目を追加", use_container_width=True):
     st.rerun()
 
 # ── 合計 ───────────────────────────────────────
-valid = [e for e in st.session_state.entries if e["amount"] > 0]
+valid = [e for e in st.session_state.entries if e["amount"] and e["amount"] > 0]
 if valid:
     total = sum(e["amount"] for e in valid)
     st.markdown(f'''
