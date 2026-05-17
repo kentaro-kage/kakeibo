@@ -38,6 +38,46 @@ def get_gc():
         creds.refresh(Request())
     return gspread.authorize(creds)
 
+WATCH_BUDGETS = {
+    "食費":           30000,
+    "外食費":         15000,
+    "健太郎お小遣い": 10000,
+    "藍子お小遣い":   10000,
+    "陽和お小遣い":   10000,
+}
+
+WATCH_GROUPS = [
+    {
+        "label": "食費",
+        "items": ["食費", "外食費"],
+    },
+    {
+        "label": "お小遣い",
+        "items": ["健太郎お小遣い", "藍子お小遣い", "陽和お小遣い"],
+    },
+]
+
+@st.cache_data(ttl=60)
+def get_monthly_spending(year: int, month: int) -> dict:
+    """今月の費目別合計を返す"""
+    try:
+        gc = get_gc()
+        ws = gc.open_by_key(SPREAD_ID).worksheet("明細")
+        rows = ws.get_all_values()[1:]  # ヘッダー除く
+        prefix = f"{year}-{month:02d}"
+        totals = {k: 0 for k in WATCH_BUDGETS}
+        for r in rows:
+            if len(r) >= 6 and r[0].startswith(prefix):
+                cat = r[4]  # 費目列
+                if cat in totals:
+                    try:
+                        totals[cat] += int(float(str(r[5]).replace(",", "")))
+                    except ValueError:
+                        pass
+        return totals
+    except Exception:
+        return {k: 0 for k in WATCH_BUDGETS}
+
 def append_to_sheet(entries: list):
     gc = get_gc()
     ws = gc.open_by_key(SPREAD_ID).worksheet("明細")
@@ -61,24 +101,25 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
 
 /* ─── リセット & ベース ─────────────────────── */
-#MainMenu, footer, header { visibility: hidden; }
+#MainMenu, footer, header { visibility: hidden; height: 0; }
+[data-testid="stToolbar"] { display: none; }
+[data-testid="stDecoration"] { display: none; }
+[data-testid="stHeader"] { display: none; }
 
 html, body, [class*="css"] {
     font-family: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
-    background-color: #F7F8FA;
-    color: #111827;
 }
 
 .main .block-container {
-    padding: 0 1rem 4rem;
+    padding: 1.2rem 1rem 4rem;
     max-width: 430px;
 }
 
 /* ─── ヘッダー ──────────────────────────────── */
 .page-header {
-    padding: 2.4rem 0 1.6rem;
-    border-bottom: 1px solid #EAECF0;
-    margin-bottom: 1.6rem;
+    padding: 0.8rem 0 1.2rem;
+    border-bottom: 1px solid rgba(150,150,150,0.2);
+    margin-bottom: 1.2rem;
 }
 .page-header-label {
     font-size: 0.7rem;
@@ -91,13 +132,13 @@ html, body, [class*="css"] {
 .page-header-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #111827;
+    color: inherit;
     letter-spacing: -0.03em;
     line-height: 1.1;
 }
 .page-header-date {
     font-size: 0.82rem;
-    color: #6B7280;
+    color: #9CA3AF;
     margin-top: 0.35rem;
     font-weight: 400;
 }
@@ -126,7 +167,7 @@ html, body, [class*="css"] {
     content: '';
     flex: 1;
     height: 1px;
-    background: #F3F4F6;
+    background: rgba(150,150,150,0.2);
 }
 
 /* ─── ラベル ────────────────────────────────── */
@@ -273,7 +314,7 @@ button[kind="secondary"]:active {
 .done-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #111827;
+    color: inherit;
     text-align: center;
     letter-spacing: -0.02em;
     margin-bottom: 0.3rem;
@@ -302,6 +343,70 @@ button[kind="secondary"]:active {
 .done-cat { font-size: 0.9rem; color: #374151; font-weight: 500; }
 .done-note { font-size: 0.75rem; color: #9CA3AF; margin-top: 0.1rem; }
 .done-amt { font-size: 0.97rem; font-weight: 700; color: #111827; }
+
+/* ─── 残高 島 ───────────────────────────────── */
+.island {
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.island-header {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9CA3AF;
+    border-bottom: 1px solid #F3F4F6;
+    background: rgba(0,0,0,0.02);
+}
+.island-row {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.1rem;
+    border-bottom: 1px solid #F3F4F6;
+    gap: 0.75rem;
+}
+.island-row:last-child { border-bottom: none; }
+.island-row-left { flex: 1; min-width: 0; }
+.island-row-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.island-bar-bg {
+    height: 3px;
+    background: rgba(150,150,150,0.15);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.island-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+.island-bar-fill.safe    { background: #10B981; }
+.island-bar-fill.warning { background: #F59E0B; }
+.island-bar-fill.danger  { background: #EF4444; }
+.island-row-right { text-align: right; flex-shrink: 0; }
+.island-remaining {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.island-remaining.safe    { color: #10B981; }
+.island-remaining.warning { color: #D97706; }
+.island-remaining.danger  { color: #EF4444; }
+.island-used {
+    font-size: 0.68rem;
+    color: #9CA3AF;
+    margin-top: 0.2rem;
+}
 
 /* ─── フッター ──────────────────────────────── */
 .page-footer {
@@ -363,13 +468,41 @@ if st.session_state.done:
 
 # ── ヘッダー ───────────────────────────────────
 today = date.today()
-st.markdown(f'''
-<div class="page-header">
-  <div class="page-header-label">Household Budget</div>
-  <div class="page-header-title">支出を記録する</div>
-  <div class="page-header-date">{today.year}年{today.month}月{today.day}日（{DAYS_JA[today.weekday()]}）</div>
-</div>
-''', unsafe_allow_html=True)
+st.markdown('<p class="page-header-label">Household Budget</p>', unsafe_allow_html=True)
+st.title("支出を記録する")
+st.markdown(f'<p class="page-header-date">{today.year}年{today.month}月{today.day}日（{DAYS_JA[today.weekday()]}）</p>', unsafe_allow_html=True)
+st.divider()
+
+# ── 残高ウィジェット ───────────────────────────
+spending  = get_monthly_spending(today.year, today.month)
+islands_html = ""
+
+for group in WATCH_GROUPS:
+    islands_html += f'<div class="island"><div class="island-header">{group["label"]}</div>'
+    for name in group["items"]:
+        budget    = WATCH_BUDGETS[name]
+        spent     = spending.get(name, 0)
+        remaining = budget - spent
+        pct       = min(spent / budget * 100, 100) if budget > 0 else 100
+        status    = "danger" if remaining < 0 else ("warning" if pct >= 80 else "safe")
+        sign      = "−" if remaining < 0 else ""
+        label     = name.replace("お小遣い", "")
+        islands_html += f"""
+        <div class="island-row">
+          <div class="island-row-left">
+            <div class="island-row-name">{label}</div>
+            <div class="island-bar-bg">
+              <div class="island-bar-fill {status}" style="width:{pct:.1f}%"></div>
+            </div>
+          </div>
+          <div class="island-row-right">
+            <div class="island-remaining {status}">{sign}¥{abs(remaining):,}</div>
+            <div class="island-used">/ ¥{budget:,}</div>
+          </div>
+        </div>"""
+    islands_html += "</div>"
+
+st.markdown(islands_html, unsafe_allow_html=True)
 
 # ── エントリ入力 ───────────────────────────────
 delete_idx = None
