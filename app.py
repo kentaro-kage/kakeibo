@@ -148,29 +148,34 @@ html, body, [class*="css"] {
 
 /* ─── カード ────────────────────────────────── */
 .entry-card {
-    background: #ffffff;
     border-radius: 16px;
-    padding: 1.3rem 1.3rem 0.6rem;
     margin-bottom: 0.75rem;
-    border: 1px solid #E5E7EB;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    border: 2px solid rgba(255,255,255,0.12);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    overflow: hidden;
 }
-.card-index {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #9CA3AF;
-    margin-bottom: 1rem;
+.card-header {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.6rem;
+    padding: 0.65rem 1rem;
+    background: rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.card-index::after {
-    content: '';
+.card-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: rgba(255,255,255,0.15);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+}
+.card-divider {
     flex: 1;
     height: 1px;
-    background: rgba(150,150,150,0.2);
+    background: rgba(255,255,255,0.08);
 }
 
 /* ─── ラベル ────────────────────────────────── */
@@ -514,7 +519,13 @@ st.markdown(islands_html, unsafe_allow_html=True)
 delete_idx = None
 
 for i, e in enumerate(st.session_state.entries):
-    st.markdown(f'<div class="entry-card"><div class="card-index">Item {i+1:02d}</div></div>', unsafe_allow_html=True)
+    st.markdown(f'''
+    <div class="entry-card">
+      <div class="card-header">
+        <span class="card-badge">Item {i+1:02d}</span>
+        <span class="card-divider"></span>
+      </div>
+    </div>''', unsafe_allow_html=True)
 
     d_val = date.fromisoformat(e["date"]) if e["date"] else date.today()
     st.session_state.entries[i]["date"] = str(
