@@ -58,8 +58,8 @@ WATCH_GROUPS = [
 ]
 
 @st.cache_data(ttl=60)
-def get_monthly_spending(year: int, month: int) -> dict:
-    """今月の費目別合計を返す"""
+def get_monthly_spending(year: int, month: int):
+    """今月の費目別合計を返す。エラー時はメッセージも返す。"""
     try:
         gc = get_gc()
         ws = gc.open_by_key(SPREAD_ID).worksheet("明細")
@@ -74,9 +74,9 @@ def get_monthly_spending(year: int, month: int) -> dict:
                         totals[cat] += int(float(str(r[5]).replace(",", "")))
                     except ValueError:
                         pass
-        return totals
-    except Exception:
-        return {k: 0 for k in WATCH_BUDGETS}
+        return totals, None
+    except Exception as e:
+        return {k: 0 for k in WATCH_BUDGETS}, str(e)
 
 def append_to_sheet(entries: list):
     gc = get_gc()
@@ -474,7 +474,9 @@ st.markdown(f'<p class="page-header-date">{today.year}年{today.month}月{today.
 st.divider()
 
 # ── 残高ウィジェット ───────────────────────────
-spending  = get_monthly_spending(today.year, today.month)
+spending, spend_err  = get_monthly_spending(today.year, today.month)
+if spend_err:
+    st.warning(f"残高取得エラー: {spend_err}")
 islands_html = ""
 
 for group in WATCH_GROUPS:
@@ -566,7 +568,9 @@ if st.button("記録する", type="primary", use_container_width=True):
             try:
                 rows = append_to_sheet(valid)
                 st.session_state.done = rows
+                st.session_state.entries = [{"date": str(date.today()), "category": "食費", "amount": 0, "note": ""}]
                 get_gc.clear()
+                get_monthly_spending.clear()   # 残高を即時更新
                 st.rerun()
             except Exception as ex:
                 st.error(f"エラー: {ex}")
