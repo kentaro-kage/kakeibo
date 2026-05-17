@@ -502,8 +502,8 @@ for group in WATCH_GROUPS:
             </div>
           </div>
           <div class="island-row-right">
+            <div class="island-used">残金</div>
             <div class="island-remaining {status}">{sign}¥{abs(remaining):,}</div>
-            <div class="island-used">/ ¥{budget:,}</div>
           </div>
         </div>"""
     islands_html += "</div>"
