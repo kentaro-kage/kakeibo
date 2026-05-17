@@ -64,10 +64,12 @@ def get_monthly_spending(year: int, month: int):
         gc = get_gc()
         ws = gc.open_by_key(SPREAD_ID).worksheet("明細")
         rows = ws.get_all_values()[1:]  # ヘッダー除く
-        prefix = f"{year}-{month:02d}"
+        # 日付フォーマットを両方対応（2026-05 / 2026/05）
+        prefix_h = f"{year}-{month:02d}"
+        prefix_s = f"{year}/{month:02d}"
         totals = {k: 0 for k in WATCH_BUDGETS}
         for r in rows:
-            if len(r) >= 6 and r[0].startswith(prefix):
+            if len(r) >= 6 and (r[0].startswith(prefix_h) or r[0].startswith(prefix_s)):
                 cat = r[4]  # 費目列
                 if cat in totals:
                     try:
