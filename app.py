@@ -516,40 +516,40 @@ for group in WATCH_GROUPS:
 st.markdown(islands_html, unsafe_allow_html=True)
 
 # ── エントリ入力 ───────────────────────────────
+st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
 delete_idx = None
 
 for i, e in enumerate(st.session_state.entries):
-    st.markdown(f'''
-    <div class="entry-card">
-      <div class="card-header">
-        <span class="card-badge">Item {i+1:02d}</span>
-        <span class="card-divider"></span>
-      </div>
-    </div>''', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown(
+            f"<div style='font-size:0.72rem;font-weight:700;letter-spacing:0.1em;"
+            f"text-transform:uppercase;color:#9CA3AF;margin-bottom:0.2rem'>ITEM {i+1:02d}</div>",
+            unsafe_allow_html=True
+        )
 
-    d_val = date.fromisoformat(e["date"]) if e["date"] else date.today()
-    st.session_state.entries[i]["date"] = str(
-        st.date_input("日付", value=d_val, key=f"date_{i}")
-    )
+        d_val = date.fromisoformat(e["date"]) if e["date"] else date.today()
+        st.session_state.entries[i]["date"] = str(
+            st.date_input("日付", value=d_val, key=f"date_{i}")
+        )
 
-    cat_idx = CATEGORIES.index(e["category"]) if e["category"] in CATEGORIES else 0
-    st.session_state.entries[i]["category"] = st.selectbox(
-        "費目", CATEGORIES, index=cat_idx, key=f"cat_{i}"
-    )
+        cat_idx = CATEGORIES.index(e["category"]) if e["category"] in CATEGORIES else 0
+        st.session_state.entries[i]["category"] = st.selectbox(
+            "費目", CATEGORIES, index=cat_idx, key=f"cat_{i}"
+        )
 
-    st.session_state.entries[i]["amount"] = st.number_input(
-        "金額（円）", min_value=0, value=e["amount"], step=10, key=f"amt_{i}"
-    )
+        st.session_state.entries[i]["amount"] = st.number_input(
+            "金額（円）", min_value=0, value=e["amount"], step=10, key=f"amt_{i}"
+        )
 
-    st.session_state.entries[i]["note"] = st.text_input(
-        "補足", value=e["note"], placeholder="店舗名・メモなど", key=f"note_{i}"
-    )
+        st.session_state.entries[i]["note"] = st.text_input(
+            "補足", value=e["note"], placeholder="店舗名・メモなど", key=f"note_{i}"
+        )
 
-    if i > 0:
-        st.markdown('<div class="del-btn">', unsafe_allow_html=True)
-        if st.button("削除", key=f"del_{i}", use_container_width=True):
-            delete_idx = i
-        st.markdown('</div>', unsafe_allow_html=True)
+        if i > 0:
+            st.markdown('<div class="del-btn">', unsafe_allow_html=True)
+            if st.button("削除", key=f"del_{i}", use_container_width=True):
+                delete_idx = i
+            st.markdown('</div>', unsafe_allow_html=True)
 
 if delete_idx is not None:
     st.session_state.entries.pop(delete_idx)
