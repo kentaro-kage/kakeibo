@@ -348,9 +348,9 @@ button[kind="secondary"]:active {
     border-bottom: 1px solid #F3F4F6;
 }
 .done-row:last-child { border-bottom: none; }
-.done-cat { font-size: 0.9rem; color: #374151; font-weight: 500; }
-.done-note { font-size: 0.75rem; color: #9CA3AF; margin-top: 0.1rem; }
-.done-amt { font-size: 0.97rem; font-weight: 700; color: #111827; }
+.done-cat { font-size: 0.9rem; font-weight: 500; }
+.done-note { font-size: 0.78rem; color: #9CA3AF; margin-left: 0.4rem; }
+.done-amt { font-size: 0.97rem; font-weight: 700; }
 
 /* ─── 残高 島 ───────────────────────────────── */
 .island {
@@ -445,15 +445,13 @@ if st.session_state.done:
 
     rows_html = ""
     for r in rows:
-        note_html = f'<div class="done-note">{r[2]}</div>' if r[2] else ""
-        rows_html += f'''
-        <div class="done-row">
-          <div>
-            <div class="done-cat">{r[3]}</div>
-            {note_html}
-          </div>
-          <div class="done-amt">¥{int(r[5]):,}</div>
-        </div>'''
+        note_str = f'<span class="done-note">{r[2]}</span>' if r[2] else ""
+        rows_html += (
+            f'<div class="done-row">'
+            f'<span class="done-cat">{r[3]}{note_str}</span>'
+            f'<span class="done-amt">¥{int(r[5]):,}</span>'
+            f'</div>'
+        )
 
     st.markdown(f'''
     <div class="done-wrap">
